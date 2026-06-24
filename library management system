@@ -1,0 +1,73 @@
+import streamlit as st
+import pandas as pd
+import os
+
+FILE = "books.csv"
+
+if not os.path.exists(FILE):
+    df = pd.DataFrame(columns=["Book_ID", "Title", "Author", "Status"])
+    df.to_csv(FILE, index=False)
+
+st.title("📚 Library Management System")
+
+menu = st.sidebar.selectbox(
+    "Menu",
+    ["Add Book", "View Books", "Search Book", "Issue Book", "Return Book", "Delete Book"]
+)
+
+df = pd.read_csv(FILE)
+
+if menu == "Add Book":
+    st.subheader("Add New Book")
+
+    bid = st.text_input("Book ID")
+    title = st.text_input("Title")
+    author = st.text_input("Author")
+
+    if st.button("Add"):
+        new_book = pd.DataFrame({
+            "Book_ID":[bid],
+            "Title":[title],
+            "Author":[author],
+            "Status":["Available"]
+        })
+
+        df = pd.concat([df,new_book],ignore_index=True)
+        df.to_csv(FILE,index=False)
+        st.success("Book Added Successfully")
+
+elif menu == "View Books":
+    st.subheader("Book Records")
+    st.dataframe(df)
+
+elif menu == "Search Book":
+    keyword = st.text_input("Enter Book Title")
+
+    result = df[df["Title"].str.contains(keyword, case=False, na=False)]
+
+    if not result.empty:
+        st.dataframe(result)
+
+elif menu == "Issue Book":
+    bid = st.text_input("Enter Book ID")
+
+    if st.button("Issue"):
+        df.loc[df["Book_ID"] == bid, "Status"] = "Issued"
+        df.to_csv(FILE,index=False)
+        st.success("Book Issued")
+
+elif menu == "Return Book":
+    bid = st.text_input("Enter Book ID")
+
+    if st.button("Return"):
+        df.loc[df["Book_ID"] == bid, "Status"] = "Available"
+        df.to_csv(FILE,index=False)
+        st.success("Book Returned")
+
+elif menu == "Delete Book":
+    bid = st.text_input("Book ID")
+
+    if st.button("Delete"):
+        df = df[df["Book_ID"] != bid]
+        df.to_csv(FILE,index=False)
+        st.success("Book Deleted")
